@@ -15,6 +15,8 @@ Two varieties:
 - Assembly-based only (due to csc.exe)
 - Basic gist export
 
+License: Apache License v2.0
+
 Roadmap
   - Add gist export to REPL
   - Color/syntax highlighting for REPL?
