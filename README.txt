@@ -6,7 +6,7 @@ Two varieties:
 
 CodeSaber.exe
 - Microsoft (R) Roslyn-based basic C# REPL
-  (shout out to @glennblock for the inspiration)
+  (shout out to @gblock for the inspiration)
 - Scripts (no class/global type declaration required) or assemblies
 - Verrry basic initial implementation but *mucho* room for growth
 
