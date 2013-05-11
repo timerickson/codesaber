@@ -103,10 +103,10 @@ namespace CodeSaber.Shrepl
                 {
                     var script = previous + NewLine + chunk;
                     var testSession = Engine.CreateSession();
-                    var submission = testSession.CompileSubmission<object>(script);
+                    var submission = testSession.CompileSubmission<object>(script, null, false);
                     CompiledChunks.Add(chunk);
                     _lastCompiledLineIndex = Lines.Count - 1;
-                    submission = RuntimeSession.CompileSubmission<object>(chunk);
+                    submission = RuntimeSession.CompileSubmission<object>(chunk, null, false);
                     return submission;
                 }
                 catch{}
