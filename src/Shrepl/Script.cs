@@ -9,8 +9,15 @@ namespace CodeSaber.Shrepl
 {
     public class Script
     {
-        public Script()
+        private readonly string _newLine;
+
+        public Script(string newLine)
         {
+            if (string.IsNullOrEmpty(newLine))
+                throw new ArgumentException("must be populated", "newLine");
+
+            _newLine = newLine;
+
             Lines = new List<string>();
             CompiledChunks = new List<string>();
             Submissions = new List<Submission<object>>();
@@ -27,7 +34,7 @@ namespace CodeSaber.Shrepl
             RuntimeSession = Engine.CreateSession();
         }
 
-        private const string NewLine = "\r\n";
+        private string NewLine { get { return _newLine; } }
 
         private ScriptEngine Engine { get; set; }
 

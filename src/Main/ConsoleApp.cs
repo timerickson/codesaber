@@ -12,41 +12,52 @@ namespace CodeSaber
 
         private static Script _script;
 
+        private const string NewLine = "\r\n";
+
         static void Main(string[] args)
         {
             Console.WriteLine("CodeSaber C# REPL by Tim Erickson (in2bits.org)");
             Console.WriteLine("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1");
             Console.WriteLine("Type \"#help\" for more information.");
 
-            _script = new Script();
+            _script = new Script(NewLine);
 
-            _script.AddInput(TestInput);
-            Console.Write(TestInput);
+            Console.Write("> ");
+
+            var testInputLines = TestInput.Split(new string[] {NewLine}, StringSplitOptions.None);
+            for (var i = 0; i < testInputLines.Length; i++)
+            {
+                var testInputLine = testInputLines[i];
+                _script.AddInput(testInputLine);
+                Console.Write(testInputLine);
+                if (i < (testInputLines.Length - 1))
+                {
+                    _script.AddInput(NewLine);
+                    Console.Write(NewLine + "> ");
+                }
+            }
 
             while (true)
             {
-                while (Console.KeyAvailable)
+                var keyInfo = Console.ReadKey();
+                var c = keyInfo.KeyChar;
+                var key = keyInfo.Key;
+                if (key == ConsoleKey.Backspace)
                 {
-                    var keyInfo = Console.ReadKey();
-                    var c = keyInfo.KeyChar;
-                    var key = keyInfo.Key;
-                    if (key == ConsoleKey.Backspace)
-                    {
-                        _script.RemoveInput(1);
-                        Console.Write(" \b");
-                    }
-                    else if (key == ConsoleKey.Enter)
-                    {
-                        Console.Write("\r\n");
-                        if (!ProcessCommand())
-                            _script.Process();
-                    }
-                    else
-                    {
-                        _script.AddInput(c.ToString());
-                    }
+                    _script.RemoveInput(1);
+                    Console.Write(" \b");
                 }
-                Thread.Sleep(0);
+                else if (key == ConsoleKey.Enter)
+                {
+                    Console.Write("\r\n");
+                    if (!ProcessCommand())
+                        _script.Process();
+                    Console.Write("> ");
+                }
+                else
+                {
+                    _script.AddInput(c.ToString());
+                }
             }
         }
 
