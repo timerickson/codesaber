@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using CodeSaber.Shrepl;
 
@@ -8,105 +10,208 @@ namespace CodeSaber
 {
     public class ConsoleApp
     {
-        private const string TestInput = "using System;\r\nvar num = 42;\r\nConsole.WriteLine(num);";
 
         private static Script _script;
 
-        private const string NewLine = "\r\n";
+        private static readonly string NewLine;
+        private const string InputCaret = "> ";
+
+        static ConsoleApp()
+        {
+            NewLine = Environment.NewLine;
+        }
 
         static void Main(string[] args)
         {
-            Console.WriteLine("CodeSaber C# REPL by Tim Erickson (in2bits.org)");
-            Console.WriteLine("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1");
-            Console.WriteLine("Type \"#help\" for more information.");
+            const ConsoleColor headerColor = ConsoleColor.Gray;
+            PrintOutput("CodeSaber C# REPL by Tim Erickson (in2bits.org)", headerColor);
+            PrintOutput("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1", headerColor);
+            PrintOutput("Type \"#help\" for more information.", headerColor);
 
             _script = new Script(NewLine);
 
-            Console.Write("> ");
+            Console.Write(InputCaret);
 
-            var testInputLines = TestInput.Split(new string[] {NewLine}, StringSplitOptions.None);
-            for (var i = 0; i < testInputLines.Length; i++)
-            {
-                var testInputLine = testInputLines[i];
-                _script.AddInput(testInputLine);
-                Console.Write(testInputLine);
-                if (i < (testInputLines.Length - 1))
-                {
-                    _script.AddInput(NewLine);
-                    Console.Write(NewLine + "> ");
-                }
-            }
+            AddExampleInput();
 
             while (true)
             {
                 var keyInfo = Console.ReadKey();
                 var c = keyInfo.KeyChar;
                 var key = keyInfo.Key;
+
                 if (key == ConsoleKey.Backspace)
-                {
-                    _script.RemoveInput(1);
-                    Console.Write(" \b");
-                }
+                    ProcessBackspace();
                 else if (key == ConsoleKey.Enter)
-                {
-                    Console.Write("\r\n");
-                    if (!ProcessCommand())
-                        _script.Process();
-                    Console.Write("> ");
-                }
+                    ProcessInput();
                 else
-                {
-                    _script.AddInput(c.ToString());
-                }
+                    _script.Append(c.ToString(CultureInfo.CurrentCulture));
             }
         }
 
-        private static bool ProcessCommand()
+        private static void AddExampleInput()
+        {
+            var testInputLines = 
+                "using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n"
+                .Split(new string[] { NewLine }, StringSplitOptions.None);
+
+            for (var i = 0; i < testInputLines.Length; i++)
+            {
+                var testInputLine = testInputLines[i];
+                _script.Append(testInputLine);
+                Console.Write(testInputLine);
+                if (i < (testInputLines.Length - 1))
+                    ProcessInput();
+            }
+        }
+
+        private static void ProcessBackspace()
+        {
+            _script.RemoveInput(1);
+            Console.Write(" \b");
+        }
+
+        private static void ProcessInput()
+        {
+            Console.Write(NewLine);
+            var command = GetCommand();
+            if (command == CommandInfo.Empty)
+            {
+                _script.Process();
+                var state = _script.State;
+                if (state.Result != null)
+                {
+                    PrintOutput(state.Result.ToString(), ConsoleColor.Cyan);
+                }
+                else if (state.RunTimeException != null)
+                {
+                    PrintOutput(state.RunTimeException.Message, ConsoleColor.DarkRed);
+                }
+                else if (state.CompileTimeException != null)
+                {
+                    PrintOutput(state.CompileTimeException.Message, ConsoleColor.Red);
+                    if (state.CompileTimeException.Message.Contains("CS1024: Preprocessor directive expected"))
+                        PrintOutput("Try '#help'...", ConsoleColor.Red);
+                }
+
+                if (state.IsExpectingClosingChar.HasValue)
+                    Console.Write(new string(' ', InputCaret.Length));
+                else
+                    Console.Write(InputCaret);
+            }
+            else
+            {
+                var output = command.Execute();
+                if (output != null)
+                    PrintOutput(output.ToString(), ConsoleColor.Green);
+                Console.Write(InputCaret);
+            }
+        }
+
+        private static void PrintOutput(string output, ConsoleColor color)
+        {
+            var currentColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            foreach (var line in output.Split(new string[] {NewLine}, StringSplitOptions.None))
+                Console.WriteLine(line);
+            Console.ForegroundColor = currentColor;
+        }
+
+        private static CommandInfo GetCommand()
         {
             var pendingLine = _script.PendingLine;
             if (pendingLine == null)
-                return false;
+                return CommandInfo.Empty;
 
-            if (pendingLine.StartsWith("#"))
-            {
-                var command = pendingLine.Substring(1).ToLowerInvariant();
+            if (!pendingLine.StartsWith("#"))
+                return CommandInfo.Empty;
 
-                _script.AddInput("\r\n");
+            var name = pendingLine.Substring(1).ToLowerInvariant();
 
-                if (command == "exit")
-                    Environment.Exit(0);
-                else if (command == "ice")
-                    StartIce();
-                else if (command == "help")
-                    PrintHelp();
-                else
-                    Console.WriteLine(string.Format("--Unknown command: {0}", command));
-                
-                return true;
-            }
+            var command = CommandInfo.Empty;
 
-            return false;
+            if (name == "exit")
+                command = Commands.ExitCommand;
+            else if (name == "ice")
+                command = Commands.StartIceCommand;
+            else if (name == "help")
+                command = Commands.PrintHelpCommand;
+
+            if (command != CommandInfo.Empty)
+                _script.RemoveInput(pendingLine.Length);
+
+            return CommandInfo.Empty;
+        }
+    }
+
+    public static class Commands
+    {
+        public static readonly CommandInfo ExitCommand = new CommandInfo(Exit);
+        public static readonly CommandInfo PrintHelpCommand = new CommandInfo(PrintHelp);
+        public static readonly CommandInfo StartIceCommand = new CommandInfo(StartIce);
+
+        private static object Exit(object parameter)
+        {
+            Environment.Exit(0);
+            return null;
         }
 
-        private static void PrintHelp()
+        private static object PrintHelp(object parameter)
         {
-            Console.WriteLine("REPL commands:");
-            Console.WriteLine("  help    Display all available REPL commands");
-            Console.WriteLine("  ice     Open GUI (ICE - Integrated Code Environment)");
-            Console.WriteLine("  exit    Exit");
+            var help = new StringBuilder();
+            help.AppendLine("REPL commands:");
+            help.AppendLine("  help    Display all available REPL commands");
+            help.AppendLine("  ice     Open GUI (ICE - Integrated Code Environment)");
+            help.Append("  exit    Exit");
+            return help.ToString();
         }
 
         private const string IceExe = "CodeSaber.Ice.exe";
 
-        private static void StartIce()
+        private static object StartIce(object parameter)
         {
             if (!File.Exists(IceExe))
             {
                 Console.WriteLine("{0} not found.", IceExe);
-                return;
+                return null;
             }
 
             Process.Start(IceExe);
+            return null;
+        }
+
+        private static object UnknownCommand(object parameter)
+        {
+            var description = parameter as string;
+            return description;
+        }
+    }
+
+    public class CommandInfo
+    {
+        public Func<object, object> Command;
+        public object Parameter;
+        public static readonly CommandInfo Empty = new CommandInfo();
+
+        private CommandInfo()
+        {
+        }
+
+        public CommandInfo(Func<object, object> command) : this(command, null)
+        {
+        }
+
+        public CommandInfo(Func<object, object> command, object parameter)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+            Command = command;
+            Parameter = parameter;
+        }
+
+        public object Execute()
+        {
+            return Command(Parameter);
         }
     }
 }
