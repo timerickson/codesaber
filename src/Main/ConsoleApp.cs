@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -25,6 +26,8 @@ namespace CodeSaber
 
         private readonly string NewLine;
         private const string InputCaret = "> ";
+
+        private readonly Commands _commands = new Commands();
 
         public void Run()
         {
@@ -80,7 +83,7 @@ namespace CodeSaber
         {
             Console.Write(NewLine);
             var command = GetCommand();
-            if (command == CommandInfo.Empty)
+            if (command == null)
             {
                 _script.Process();
                 var state = _script.State;
@@ -123,41 +126,71 @@ namespace CodeSaber
             Console.ForegroundColor = currentColor;
         }
 
-        private CommandInfo GetCommand()
+        private ShreplCommand GetCommand()
         {
             var pendingLine = _script.PendingLine;
             if (pendingLine == null)
-                return CommandInfo.Empty;
+                return null;
 
             if (!pendingLine.StartsWith("#"))
-                return CommandInfo.Empty;
+                return null;
 
             var name = pendingLine.Substring(1).ToLowerInvariant();
 
-            if (name == "exit")
-                return Commands.ExitCommand;
-            else if (name == "ice")
-                return Commands.StartIceCommand;
-            else if (name == "help")
-                return Commands.PrintHelpCommand;
-
-            return CommandInfo.Empty;
+            return _commands.Get(name);
         }
     }
 
-    public static class Commands
+    public class Commands
     {
-        public static readonly CommandInfo ExitCommand = new CommandInfo(Exit);
-        public static readonly CommandInfo PrintHelpCommand = new CommandInfo(PrintHelp);
-        public static readonly CommandInfo StartIceCommand = new CommandInfo(StartIce);
+        public readonly ShreplCommand ExitCommand = new ExitCommand();
+        public readonly ShreplCommand PrintHelpCommand = new HelpCommand();
+        public readonly ShreplCommand StartIceCommand = new StartIceCommand();
+        
+        private readonly Dictionary<string, ShreplCommand> _commands = new Dictionary<string, ShreplCommand>(); 
 
-        private static object Exit(object parameter)
+        public Commands()
+        {
+            Register(ExitCommand);
+            Register(PrintHelpCommand);
+            Register(StartIceCommand);
+        }
+
+        public void Register(ShreplCommand command)
+        {
+            if (_commands.ContainsKey(command.Name))
+                throw new Exception("Duplicate command found");
+            _commands[command.Name] = command;
+        }
+
+        public ShreplCommand Get(string name)
+        {
+            return _commands[name];
+        }
+    }
+
+    public abstract class ShreplCommand
+    {
+        public abstract string Name { get; }
+        public abstract object Execute(object parameter = null);
+    }
+
+    public class ExitCommand : ShreplCommand
+    {
+        public override string Name { get { return "exit"; } }
+
+        public override object Execute(object parameter = null)
         {
             Environment.Exit(0);
             return null;
         }
+    }
 
-        private static object PrintHelp(object parameter)
+    public class HelpCommand : ShreplCommand
+    {
+        public override string Name { get { return "help"; } }
+
+        public override object Execute(object parameter = null)
         {
             var help = new StringBuilder();
             help.AppendLine("REPL commands:");
@@ -166,10 +199,15 @@ namespace CodeSaber
             help.Append("  exit    Exit");
             return help.ToString();
         }
+    }
+
+    public class StartIceCommand : ShreplCommand
+    {
+        public override string Name { get { return "ice"; } }
 
         private const string IceExe = "CodeSaber.Ice.exe";
 
-        private static object StartIce(object parameter)
+        public override object Execute(object parameter = null)
         {
             if (!File.Exists(IceExe))
             {
@@ -179,40 +217,6 @@ namespace CodeSaber
 
             Process.Start(IceExe);
             return null;
-        }
-
-        private static object UnknownCommand(object parameter)
-        {
-            var description = parameter as string;
-            return description;
-        }
-    }
-
-    public class CommandInfo
-    {
-        public Func<object, object> Command;
-        public object Parameter;
-        public static readonly CommandInfo Empty = new CommandInfo();
-
-        private CommandInfo()
-        {
-        }
-
-        public CommandInfo(Func<object, object> command) : this(command, null)
-        {
-        }
-
-        public CommandInfo(Func<object, object> command, object parameter)
-        {
-            if (command == null)
-                throw new ArgumentNullException("command");
-            Command = command;
-            Parameter = parameter;
-        }
-
-        public object Execute()
-        {
-            return Command(Parameter);
         }
     }
 }
