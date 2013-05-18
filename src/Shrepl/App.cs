@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Globalization;
-using CodeSaber.Shrepl;
 using CodeSaber.Shrepl.Commands;
 
-namespace CodeSaber
+namespace CodeSaber.Shrepl
 {
     public class App {
 
         public App()
         {
             NewLine = Environment.NewLine;
+            _commands = new CommandCollection(this);
         }
 
         private Script _script;
@@ -17,10 +17,14 @@ namespace CodeSaber
         private readonly string NewLine;
         private const string InputCaret = "> ";
 
-        private readonly CommandCollection _commands = new CommandCollection();
+        private readonly CommandCollection _commands;
+
+        private bool _running;
 
         public void Run()
         {
+            _running = true;
+
             const ConsoleColor headerColor = ConsoleColor.Gray;
             PrintOutput("CodeSaber C# REPL by Tim Erickson (in2bits.org)", headerColor);
             PrintOutput("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1", headerColor);
@@ -32,7 +36,7 @@ namespace CodeSaber
 
             AddExampleInput();
 
-            while (true)
+            while (_running)
             {
                 var keyInfo = Console.ReadKey();
                 var c = keyInfo.KeyChar;
@@ -128,6 +132,11 @@ namespace CodeSaber
             var name = pendingLine.Substring(1).ToLowerInvariant();
 
             return _commands.Get(name);
+        }
+
+        public void Exit()
+        {
+            _running = false;
         }
     }
 }

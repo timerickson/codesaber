@@ -6,17 +6,13 @@ namespace CodeSaber.Shrepl
 {
     public class CommandCollection
     {
-        public readonly ShreplCommand ExitCommand = new ExitCommand();
-        public readonly ShreplCommand PrintHelpCommand = new HelpCommand();
-        public readonly ShreplCommand StartIceCommand = new StartIceCommand();
-        
         private readonly Dictionary<string, ShreplCommand> _commands = new Dictionary<string, ShreplCommand>(); 
 
-        public CommandCollection()
+        public CommandCollection(App app)
         {
-            Register(ExitCommand);
-            Register(PrintHelpCommand);
-            Register(StartIceCommand);
+            Register(new ExitCommand(app));
+            Register(new HelpCommand());
+            Register(new StartIceCommand());
         }
 
         public void Register(ShreplCommand command)
