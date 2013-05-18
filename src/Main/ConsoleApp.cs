@@ -10,7 +10,6 @@ namespace CodeSaber
 {
     public class ConsoleApp
     {
-
         private static Script _script;
 
         private static readonly string NewLine;
@@ -104,6 +103,7 @@ namespace CodeSaber
                 var output = command.Execute();
                 if (output != null)
                     PrintOutput(output.ToString(), ConsoleColor.Green);
+                _script.ClearInput();
                 Console.Write(InputCaret);
             }
         }
@@ -128,17 +128,12 @@ namespace CodeSaber
 
             var name = pendingLine.Substring(1).ToLowerInvariant();
 
-            var command = CommandInfo.Empty;
-
             if (name == "exit")
-                command = Commands.ExitCommand;
+                return Commands.ExitCommand;
             else if (name == "ice")
-                command = Commands.StartIceCommand;
+                return Commands.StartIceCommand;
             else if (name == "help")
-                command = Commands.PrintHelpCommand;
-
-            if (command != CommandInfo.Empty)
-                _script.RemoveInput(pendingLine.Length);
+                return Commands.PrintHelpCommand;
 
             return CommandInfo.Empty;
         }

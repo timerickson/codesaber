@@ -146,6 +146,11 @@ namespace CodeSaber.Shrepl
             return null;
         }
 */
+
+        public void ClearInput()
+        {
+            PendingLine = "";
+        }
     }
 
     public class InteractionState
