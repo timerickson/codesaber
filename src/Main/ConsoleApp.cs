@@ -10,17 +10,23 @@ namespace CodeSaber
 {
     public class ConsoleApp
     {
-        private static Script _script;
+        static void Main(string[] args)
+        {
+            var app = new ConsoleApp();
+            app.Run();
+        }
 
-        private static readonly string NewLine;
-        private const string InputCaret = "> ";
-
-        static ConsoleApp()
+        public ConsoleApp()
         {
             NewLine = Environment.NewLine;
         }
 
-        static void Main(string[] args)
+        private Script _script;
+
+        private readonly string NewLine;
+        private const string InputCaret = "> ";
+
+        public void Run()
         {
             const ConsoleColor headerColor = ConsoleColor.Gray;
             PrintOutput("CodeSaber C# REPL by Tim Erickson (in2bits.org)", headerColor);
@@ -48,7 +54,7 @@ namespace CodeSaber
             }
         }
 
-        private static void AddExampleInput()
+        private void AddExampleInput()
         {
             var testInputLines = 
                 "using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n"
@@ -64,13 +70,13 @@ namespace CodeSaber
             }
         }
 
-        private static void ProcessBackspace()
+        private void ProcessBackspace()
         {
             _script.RemoveInput(1);
             Console.Write(" \b");
         }
 
-        private static void ProcessInput()
+        private void ProcessInput()
         {
             Console.Write(NewLine);
             var command = GetCommand();
@@ -108,7 +114,7 @@ namespace CodeSaber
             }
         }
 
-        private static void PrintOutput(string output, ConsoleColor color)
+        private void PrintOutput(string output, ConsoleColor color)
         {
             var currentColor = Console.ForegroundColor;
             Console.ForegroundColor = color;
@@ -117,7 +123,7 @@ namespace CodeSaber
             Console.ForegroundColor = currentColor;
         }
 
-        private static CommandInfo GetCommand()
+        private CommandInfo GetCommand()
         {
             var pendingLine = _script.PendingLine;
             if (pendingLine == null)
