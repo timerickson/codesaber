@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Roslyn.Compilers.CSharp;
@@ -38,40 +39,28 @@ namespace CodeSaber.Shrepl
         private ScriptEngine Engine { get; set; }
         private Session RuntimeSession { get; set; }
 
-        private string NewLine { get; set; }
+        public string NewLine { get; set; }
 
         private List<string> Lines { get; set; }
-        public string PendingLine { get; private set; }
         private int _lastExecutedLineIndex = -1;
 
-
-        public void RemoveInput(int charCount)
+        public void AppendLine(string input)
         {
-            if (PendingLine == null)
-                return;
-            if (PendingLine.Length < charCount)
-                return;
-            PendingLine = PendingLine.Substring(0, PendingLine.Length - charCount);
-        }
-
-        public void Append(string input)
-        {
-            var lines = (PendingLine + input).Split(new[] { NewLine }, StringSplitOptions.None);
-            var lineCount = lines.Length;
-            if (lineCount > 1)
+            var newLines = input.GetLines().ToList();
+            if (newLines.Count > 1)
                 throw new Exception("Can't add multiple lines of input");
 
-            PendingLine = lines[0];
+            Lines.Add(newLines[0]);
+        }
+
+        public void AppendExecutedCommandLine(string input)
+        {
+            AppendLine(input);
+            _lastExecutedLineIndex = Lines.Count - 1;
         }
 
         public InteractionState Process()
         {
-            if (PendingLine != null)
-            {
-                Lines.Add(PendingLine);
-                PendingLine = null;
-            }
-
             UpdateState();
 
             return State;
@@ -90,6 +79,7 @@ namespace CodeSaber.Shrepl
             }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex.Message);
                 UpdateClosingExpectation(ex);
                 if (!State.IsExpectingClosingChar.HasValue)
                     State.CompileTimeException = ex;
@@ -119,8 +109,8 @@ namespace CodeSaber.Shrepl
                 closingChar = ')';
             else if (message.Contains("CS1513: } expected"))
                 closingChar = '}';
-            else if (message.Contains("CS1002: ; expected"))
-                closingChar = ';';
+            else if (message.Contains("CS1003: Syntax error, ']' expected"))
+                closingChar = ']';
 
             if (closingChar.HasValue)
                 State.IsExpectingClosingChar = closingChar.Value;
@@ -146,11 +136,6 @@ namespace CodeSaber.Shrepl
             return null;
         }
 */
-
-        public void ClearInput()
-        {
-            PendingLine = "";
-        }
     }
 
     public class InteractionState

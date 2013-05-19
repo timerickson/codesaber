@@ -22,8 +22,19 @@ namespace CodeSaber.Shrepl
             _commands[command.Name] = command;
         }
 
-        public ShreplCommand Get(string name)
+        public ShreplCommand Get(string input)
         {
+            if (input == null)
+                return null;
+
+            if (!input.StartsWith("#"))
+                return null;
+
+            var name = input.Substring(1).ToLowerInvariant();
+
+            if (!_commands.ContainsKey(name))
+                return null;
+
             return _commands[name];
         }
     }
