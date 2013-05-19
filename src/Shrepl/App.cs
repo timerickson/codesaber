@@ -45,7 +45,7 @@ namespace CodeSaber.Shrepl
 
             IsRunning = true;
 
-            Reader.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
+            //Reader.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
 
             Loop();
         }
@@ -54,7 +54,7 @@ namespace CodeSaber.Shrepl
         {
             while (IsRunning)
             {
-                var input = Reader.Read();
+                var input = Reader.Read(Script.State.IsExpectingClosingChar.HasValue);
                 var output = Executor.Execute(input);
                 Printer.Print(output);
             }

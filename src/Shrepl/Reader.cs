@@ -19,25 +19,38 @@ namespace CodeSaber.Shrepl
 
         private InputArea Input;
 
-        public string Read()
+        public string Read(bool isStatementContinuation)
         {
-            EnqueuRawInputBuffer();
+            if (isStatementContinuation)
+                Input.Continue();
+            else
+                Input = new InputArea(_app.NewLine);
 
-            Input = new InputArea(_app.NewLine);
+            EnqueuRawInputBuffer();
 
             while (_app.IsRunning && !Input.IsComplete)
             {
                 if (_inputBuffer.Count > 0)
                     Input.Append(_inputBuffer.Dequeue());
                 else
-                    Input.ReadKey();
+                    ReadKey();
             }
 
             var result = Input.Text;
 
-            Input.Reset();
-
             return result;
+        }
+
+        public void ReadKey()
+        {
+            var keyInfo = Console.ReadKey(true);
+            var key = keyInfo.Key;
+            if (key == ConsoleKey.Enter)
+                Input.Enter();
+            else if (key == ConsoleKey.Backspace)
+                Input.Backspace();
+            else
+                Input.Append(keyInfo);
         }
 
         public void Buffer(string raw)

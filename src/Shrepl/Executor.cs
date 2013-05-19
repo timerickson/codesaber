@@ -31,7 +31,7 @@ namespace CodeSaber.Shrepl
         private OutputInfo ProcessCommand(ShreplCommand command, string commandLine)
         {
             var output = command.Execute();
-            _script.AppendExecutedCommandLine(commandLine);
+            _script.AppendExecutedCommand(commandLine);
             if (output == null)
                 return OutputInfo.Empty;
 
@@ -40,8 +40,7 @@ namespace CodeSaber.Shrepl
 
         private OutputInfo ProcessScript(string input)
         {
-            _script.AppendLine(input);
-            _script.Process();
+            _script.Process(input);
             var state = _script.State;
             if (state.Result != null)
                 return new OutputInfo(state.Result.ToString(), ConsoleColor.Cyan);

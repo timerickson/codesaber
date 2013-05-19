@@ -18,7 +18,7 @@ namespace CodeSaber.Shrepl
 
             NewLine = newLine;
 
-            Lines = new List<string>();
+            Chunks = new List<string>();
 
             Engine = new ScriptEngine();
 
@@ -33,7 +33,7 @@ namespace CodeSaber.Shrepl
 
             RuntimeSession = Engine.CreateSession();
 
-            State = new InteractionState();
+            State = new ScriptState();
         }
 
         private ScriptEngine Engine { get; set; }
@@ -41,38 +41,31 @@ namespace CodeSaber.Shrepl
 
         public string NewLine { get; set; }
 
-        private List<string> Lines { get; set; }
-        private int _lastExecutedLineIndex = -1;
+        private List<string> Chunks { get; set; }
 
-        public void AppendLine(string input)
+        private void AppendChunk(string chunk)
         {
-            var newLines = input.GetLines().ToList();
-            if (newLines.Count > 1)
-                throw new Exception("Can't add multiple lines of input");
-
-            Lines.Add(newLines[0]);
+            Chunks.Add(chunk);
         }
 
-        public void AppendExecutedCommandLine(string input)
+        public void AppendExecutedCommand(string commandInput)
         {
-            AppendLine(input);
-            _lastExecutedLineIndex = Lines.Count - 1;
+            AppendChunk(commandInput);
         }
 
-        public InteractionState Process()
+        public ScriptState Process(string scriptChunk)
         {
-            UpdateState();
+            UpdateState(scriptChunk);
 
             return State;
         }
 
-        public InteractionState State { get; set; }
+        public ScriptState State { get; set; }
 
-        private void UpdateState()
+        private void UpdateState(string scriptChunk)
         {
             State.Reset();
 
-            string scriptChunk = string.Join(NewLine, Lines.Skip(_lastExecutedLineIndex + 1));
             try
             {
                 State.Submission = RuntimeSession.CompileSubmission<object>(scriptChunk);
@@ -80,12 +73,10 @@ namespace CodeSaber.Shrepl
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                UpdateClosingExpectation(ex);
+                State.UpdateClosingExpectation(ex);
                 if (!State.IsExpectingClosingChar.HasValue)
                     State.CompileTimeException = ex;
             }
-            if (!State.IsExpectingClosingChar.HasValue)
-                _lastExecutedLineIndex = Lines.Count - 1;
 
             if (State.Submission != null)
             {
@@ -98,22 +89,6 @@ namespace CodeSaber.Shrepl
                     State.RunTimeException = ex;
                 }
             }
-        }
-
-        private void UpdateClosingExpectation(Exception ex)
-        {
-            var message = ex.Message;
-            char? closingChar = null;
-
-            if (message.Contains("CS1026: ) expected"))
-                closingChar = ')';
-            else if (message.Contains("CS1513: } expected"))
-                closingChar = '}';
-            else if (message.Contains("CS1003: Syntax error, ']' expected"))
-                closingChar = ']';
-
-            if (closingChar.HasValue)
-                State.IsExpectingClosingChar = closingChar.Value;
         }
 
 /*
@@ -136,23 +111,5 @@ namespace CodeSaber.Shrepl
             return null;
         }
 */
-    }
-
-    public class InteractionState
-    {
-        public Submission<object> Submission { get; set; }
-        public Exception CompileTimeException { get; set; }
-        public char? IsExpectingClosingChar { get; set; }
-        public object Result { get; set; }
-        public Exception RunTimeException { get; set; }
-
-        public void Reset()
-        {
-            Submission = null;
-            CompileTimeException = null;
-            IsExpectingClosingChar = null;
-            Result = null;
-            RunTimeException = null;
-        }
     }
 }

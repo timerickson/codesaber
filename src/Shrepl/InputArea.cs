@@ -9,6 +9,7 @@ namespace CodeSaber.Shrepl
         public InputArea(string newLine)
         {
             _newLine = newLine;
+            MarkInputStart();
         }
 
         private const string InputStartMarker = "> ";
@@ -17,48 +18,26 @@ namespace CodeSaber.Shrepl
 
         public string Text { get; set; }
 
-        private bool _hasMarkedInputStart;
-
-        public void ReadKey()
-        {
-            MarkInputStart();
-
-            var keyInfo = Console.ReadKey(true);
-            var key = keyInfo.Key;
-            if (key == ConsoleKey.Enter)
-                Enter();
-            else if (key == ConsoleKey.Backspace)
-                Backspace();
-            else
-                Append(keyInfo);
-        }
-
         private void MarkInputStart()
         {
-            if (!_hasMarkedInputStart)
-            {
-                Console.Write(InputStartMarker);
-                _hasMarkedInputStart = true;
-            }
+            Console.Write(InputStartMarker);
         }
 
         public void Append(BufferedInput input)
         {
-            MarkInputStart();
-
             Text += input.Input;
             Console.Write(input.Input);
             if (input.IsComplete)
                 Enter();
         }
 
-        private void Append(ConsoleKeyInfo keyInfo)
+        public void Append(ConsoleKeyInfo keyInfo)
         {
             Text += new string(keyInfo.KeyChar, 1);
             Console.Write(keyInfo.KeyChar);
         }
 
-        private void Backspace()
+        public void Backspace()
         {
             if (string.IsNullOrEmpty(Text))
                 return;
@@ -72,11 +51,10 @@ namespace CodeSaber.Shrepl
             Console.Write(_newLine);
         }
 
-        public void Reset()
+        public void Continue()
         {
             IsComplete = false;
-            Text = null;
-            _hasMarkedInputStart = false;
+            Console.Write(new string(' ', InputStartMarker.Length));
         }
     }
 }
