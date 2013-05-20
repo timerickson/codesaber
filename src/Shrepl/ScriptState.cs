@@ -3,22 +3,13 @@ using Roslyn.Scripting;
 
 namespace CodeSaber.Shrepl
 {
-    public class ScriptState
+    public class ExecutionResult
     {
         public Submission<object> Submission { get; set; }
         public Exception CompileTimeException { get; set; }
         public char? IsExpectingClosingChar { get; set; }
-        public object Result { get; set; }
+        public object ReturnValue { get; set; }
         public Exception RunTimeException { get; set; }
-
-        public void Reset()
-        {
-            Submission = null;
-            CompileTimeException = null;
-            IsExpectingClosingChar = null;
-            Result = null;
-            RunTimeException = null;
-        }
 
         public void UpdateClosingExpectation(Exception ex)
         {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using CodeSaber.Shrepl.Commands;
 
@@ -13,64 +14,52 @@ namespace CodeSaber.Shrepl
         {
             _newLine = Environment.NewLine;
 
-            Commands = new CommandCollection(this);
-            Script = new Script(_newLine);
+            _commands = new CommandCollection(this);
 
-            Reader = new Reader(this);
-            Executor = new Executor(Commands, Script);
-            Printer = new Printer(this);
+            _script = new Script();
+
+            _display = new Display(_newLine, _script);
+            _executor = new Executor(_commands, _display);
+            _inputService = new InputService(_display, _executor);
         }
-
-        private readonly CommandCollection Commands;
-
-        private readonly Reader Reader;
-        private readonly Executor Executor;
-        private readonly Printer Printer;
 
         private readonly string _newLine;
-        public string NewLine
-        {
-            get { return _newLine; }
-        }
+
+        private readonly CommandCollection _commands;
+
+        private readonly InputService _inputService;
+        private readonly Script _script;
+        private readonly Executor _executor;
+        private readonly Display _display;
+
+        private bool _isRunning;
 
         public const ConsoleColor DefaultConsoleColor = ConsoleColor.Gray;
-
-        public bool IsRunning { get; private set; }
-
-        public Script Script { get; private set; }
 
         public void Run()
         {
             PrintHeader();
 
-            IsRunning = true;
+            _isRunning = true;
 
-            //Reader.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
+            _inputService.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
 
-            Loop();
-        }
-
-        private void Loop()
-        {
-            while (IsRunning)
-            {
-                var input = Reader.Read(Script.State.IsExpectingClosingChar.HasValue);
-                var output = Executor.Execute(input);
-                Printer.Print(output);
-            }
+            while (_isRunning)
+                _inputService.Read();
         }
 
         private void PrintHeader()
         {
-            const ConsoleColor headerColor = ConsoleColor.Gray;
-            Printer.PrintLine("CodeSaber C# REPL by Tim Erickson (in2bits.org)", headerColor);
-            Printer.PrintLine("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1", headerColor);
-            Printer.PrintLine("Type \"#help\" for more information.", headerColor);
+            var text = new StringBuilder();
+            text.AppendLine("CodeSaber C# REPL by Tim Erickson (in2bits.org)");
+            text.AppendLine("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1");
+            text.AppendLine("Type \"#help\" for more information.");
+            _display.OutputFeedback(text.ToString());
         }
 
         public void Exit()
         {
-            IsRunning = false;
+            _isRunning = false;
         }
     }
 }

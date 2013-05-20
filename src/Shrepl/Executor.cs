@@ -1,25 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CodeSaber.Shrepl.Commands;
+using Roslyn.Scripting;
+using Roslyn.Scripting.CSharp;
 
 namespace CodeSaber.Shrepl
 {
     public class Executor
     {
         private readonly CommandCollection _commands;
-        private readonly Script _script;
+        private readonly Display _display;
+        private readonly Session _runtimeSession;
+        private readonly ScriptEngine _engine;
 
-        public Executor(CommandCollection commands, Script script)
+        private readonly List<string> _members = new List<string>
+            {
+                "foo",
+                "bar"
+            };
+
+        public Executor(CommandCollection commands, Display display)
         {
             _commands = commands;
-            _script = script;
+            _display = display;
+            _engine = InitEngine();
+            _runtimeSession = _engine.CreateSession();
         }
 
-        public OutputInfo Execute(string input)
+        private ScriptEngine InitEngine()
+        {
+            var engine = new ScriptEngine();
+            engine.AddReference("System");
+
+            var currentDirectory = Environment.CurrentDirectory;
+            var bin = Path.Combine(currentDirectory, "bin");
+            engine.BaseDirectory = bin;
+
+            if (!Directory.Exists(bin))
+                Directory.CreateDirectory(bin);
+
+            return engine;
+        }
+
+        public IEnumerable<string> Suggest(string start)
+        {
+            return _members.Where(x => x.StartsWith(start, StringComparison.CurrentCulture));
+        } 
+
+        public bool Execute(string input)
         {
             var command = _commands.Get(input);
             if (command != null)
@@ -28,35 +59,82 @@ namespace CodeSaber.Shrepl
             return ProcessScript(input);
         }
 
-        private OutputInfo ProcessCommand(ShreplCommand command, string commandLine)
+        private bool ProcessCommand(ShreplCommand command, string commandLine)
         {
-            var output = command.Execute();
-            _script.AppendExecutedCommand(commandLine);
-            if (output == null)
-                return OutputInfo.Empty;
+            try
+            {
+                var output = command.Execute();
 
-            return new OutputInfo(output.ToString(), ConsoleColor.Green);
+                if (output != null)
+                    _display.OutputResult(output);
+            }
+            catch (Exception ex)
+            {
+                _display.OutputRunTimeException(ex);
+            }
+
+            return true;
         }
 
-        private OutputInfo ProcessScript(string input)
+        private bool ProcessScript(string input)
         {
-            _script.Process(input);
-            var state = _script.State;
-            if (state.Result != null)
-                return new OutputInfo(state.Result.ToString(), ConsoleColor.Cyan);
+            var state = ExecuteScript(input);
+
+            if (state.ReturnValue != null)
+            {
+                _display.OutputResult(state.ReturnValue);
+                return true;
+            }
 
             if (state.RunTimeException != null)
-                return new OutputInfo(state.RunTimeException.Message, ConsoleColor.DarkRed);
+            {
+                _display.OutputRunTimeException(state.RunTimeException);
+                return true;
+            }
+
+            if (state.IsExpectingClosingChar.HasValue)
+            {
+                return false;
+            }
 
             if (state.CompileTimeException != null)
             {
-                var output = state.CompileTimeException.Message;
-                if (state.CompileTimeException.Message.Contains("CS1024: Preprocessor directive expected"))
-                    output += _script.NewLine + _script.NewLine + "Try '#help'...";
-                return new OutputInfo(output, ConsoleColor.Red);
+                _display.OutputCompileTimeException(state.CompileTimeException);
+                return true;
             }
 
-            return OutputInfo.Empty;
+            return true;
+        }
+
+        private ExecutionResult ExecuteScript(string scriptChunk)
+        {
+            var result = new ExecutionResult();
+
+            try
+            {
+                result.Submission = _runtimeSession.CompileSubmission<object>(scriptChunk);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                result.UpdateClosingExpectation(ex);
+                if (!result.IsExpectingClosingChar.HasValue)
+                    result.CompileTimeException = ex;
+            }
+
+            if (result.Submission != null)
+            {
+                try
+                {
+                    result.ReturnValue = result.Submission.Execute();
+                }
+                catch (Exception ex)
+                {
+                    result.RunTimeException = ex;
+                }
+            }
+
+            return result;
         }
     }
 }
