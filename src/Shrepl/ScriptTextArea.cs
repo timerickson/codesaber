@@ -27,7 +27,7 @@ namespace CodeSaber.Shrepl
         {
             base.Process(keyInfo);
 
-            //Suggest();
+            Suggest();
         }
 
         private void Suggest()
@@ -47,7 +47,9 @@ namespace CodeSaber.Shrepl
                 return;
             var first = suggestions.First();
             var end = first.Substring(start.Length);
+            var col = Console.CursorLeft;
             Print(end, ConsoleColor.Yellow);
+            Console.CursorLeft = col;
         }
 
         public override void Enter()

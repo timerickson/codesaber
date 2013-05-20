@@ -21,8 +21,8 @@ namespace CodeSaber.Shrepl
         {
             var key = keyInfo.Key;
 
-            //if (key == ConsoleKey.LeftArrow)
-            //    CurrentTextArea.LeftArrow();
+            if (HandleArrow(key))
+                return;
 
             if (IsComplete)
                 return;
@@ -33,6 +33,49 @@ namespace CodeSaber.Shrepl
                 Backspace();
             else
                 Append(new string(keyInfo.KeyChar, 1));
+        }
+
+        private bool HandleArrow(ConsoleKey key)
+        {
+            switch (key)
+            {
+                case ConsoleKey.LeftArrow:
+                    LeftArrow();
+                    break;
+                case ConsoleKey.RightArrow:
+                    RightArrow();
+                    break;
+                case ConsoleKey.UpArrow:
+                    UpArrow();
+                    break;
+                case ConsoleKey.DownArrow:
+                    DownArrow();
+                    break;
+                default:
+                    return false;
+            }
+
+            return true;
+        }
+
+        public virtual void LeftArrow()
+        {
+            
+        }
+
+        public virtual void RightArrow()
+        {
+            
+        }
+
+        public virtual void UpArrow()
+        {
+            
+        }
+
+        public virtual void DownArrow()
+        {
+            
         }
 
         public virtual void Append(string input)
