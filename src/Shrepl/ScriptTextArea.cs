@@ -7,11 +7,13 @@ namespace CodeSaber.Shrepl
     {
         private readonly Script _script;
         private readonly Executor _executor;
+        private readonly Display _display;
 
-        public ScriptTextArea(string newLine, int displayLineIndex, Script script, Executor executor) : base(newLine, displayLineIndex)
+        public ScriptTextArea(string newLine, int displayLineIndex, Script script, Executor executor, Display display) : base(newLine, displayLineIndex)
         {
             _script = script;
             _executor = executor;
+            _display = display;
 
             MarkInputStart();
         }
@@ -28,6 +30,13 @@ namespace CodeSaber.Shrepl
             base.Process(keyInfo);
 
             Suggest();
+        }
+
+        public override void LeftArrow(ConsoleKey key, ConsoleModifiers modifiers)
+        {
+            if (Console.CursorLeft <= InputStartMarker.Length)
+                return;
+            base.LeftArrow(key, modifiers);
         }
 
         private void Suggest()
@@ -55,14 +64,39 @@ namespace CodeSaber.Shrepl
         public override void Enter()
         {
             base.Enter();
-            if (_executor.Execute(Text))
-            {
-                IsComplete = true;
-                _script.AppendChunk(this);
-            }
-            else
+
+            var result = _executor.Process(Text);
+            Process(result);
+        }
+
+        private void Process(ScriptChunkResult result)
+        {
+            if (result.IsPendingClosing)
             {
                 Print(new string(' ', InputStartMarker.Length));
+                return;
+            }
+
+            IsComplete = true;
+            _script.AppendChunk(this);
+
+            if (result.CompileTimeException != null)
+            {
+                _display.OutputCompileTimeException(result.CompileTimeException);
+                return;
+            }
+
+            result.Execute();
+
+            if (result.RunTimeException != null)
+            {
+                _display.OutputRunTimeException(result.RunTimeException);
+                return;
+            }
+
+            if (result.ReturnValue != null)
+            {
+                _display.OutputResult(result.ReturnValue);
             }
         }
     }

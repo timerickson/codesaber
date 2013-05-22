@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace CodeSaber.Shrepl
 {
@@ -15,13 +16,31 @@ namespace CodeSaber.Shrepl
 
         public bool IsComplete { get; protected set; }
 
-        public string Text { get; set; }
+        private string _text;
+        public string Text
+        {
+            get { return _text; }
+            set
+            {
+                if (string.Equals(_text, value))
+                    return;
+                _text = value;
+                UpdateLines();
+            }
+        }
+
+        private string[] Lines { get; set; }
+
+        private void UpdateLines()
+        {
+            Lines = Text.GetLines().ToArray();
+        }
 
         public virtual void Process(ConsoleKeyInfo keyInfo)
         {
             var key = keyInfo.Key;
 
-            if (HandleArrow(key))
+            if (HandleArrow(keyInfo))
                 return;
 
             if (IsComplete)
@@ -35,21 +54,22 @@ namespace CodeSaber.Shrepl
                 Append(new string(keyInfo.KeyChar, 1));
         }
 
-        private bool HandleArrow(ConsoleKey key)
+        private bool HandleArrow(ConsoleKeyInfo keyInfo)
         {
-            switch (key)
+            var key = keyInfo.Key;
+            switch (keyInfo.Key)
             {
                 case ConsoleKey.LeftArrow:
-                    LeftArrow();
+                    LeftArrow(key, keyInfo.Modifiers);
                     break;
                 case ConsoleKey.RightArrow:
-                    RightArrow();
+                    RightArrow(key, keyInfo.Modifiers);
                     break;
                 case ConsoleKey.UpArrow:
-                    UpArrow();
+                    UpArrow(key, keyInfo.Modifiers);
                     break;
                 case ConsoleKey.DownArrow:
-                    DownArrow();
+                    DownArrow(key, keyInfo.Modifiers);
                     break;
                 default:
                     return false;
@@ -58,24 +78,28 @@ namespace CodeSaber.Shrepl
             return true;
         }
 
-        public virtual void LeftArrow()
+        public virtual void LeftArrow(ConsoleKey key, ConsoleModifiers modifiers)
         {
-            
+            Console.CursorLeft--;
         }
 
-        public virtual void RightArrow()
+        public virtual void RightArrow(ConsoleKey key, ConsoleModifiers modifiers)
         {
-            
+            Console.CursorLeft++;
         }
 
-        public virtual void UpArrow()
+        public virtual void UpArrow(ConsoleKey key, ConsoleModifiers modifiers)
         {
-            
+            if (Console.CursorTop == _displayLineIndex)
+                return;
+            Console.CursorTop--;
         }
 
-        public virtual void DownArrow()
+        public virtual void DownArrow(ConsoleKey key, ConsoleModifiers modifiers)
         {
-            
+            if (Console.CursorTop == (_displayLineIndex + Text.GetLines().Count() - 1))
+                return;
+            Console.CursorTop++;
         }
 
         public virtual void Append(string input)
@@ -89,11 +113,12 @@ namespace CodeSaber.Shrepl
             if (string.IsNullOrEmpty(Text))
                 return;
             Text = Text.Substring(0, Text.Length - 1);
-            Console.Write("\b \b");
+            Print("\b \b");
         }
 
         public virtual void Enter()
         {
+            //Text += NewLine;
             Print(NewLine);
         }
 

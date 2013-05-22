@@ -19,7 +19,7 @@ namespace CodeSaber.Shrepl
 
         public TextArea NextScriptInput(Executor executor)
         {
-            var newTextArea = new ScriptTextArea(_newLine, Console.CursorTop, _script, executor);
+            var newTextArea = new ScriptTextArea(_newLine, Console.CursorTop, _script, executor, this);
             _chunks.Add(newTextArea);
             CurrentTextArea = newTextArea;
             return newTextArea;

@@ -19,7 +19,7 @@ namespace CodeSaber.Shrepl
             _script = new Script();
 
             _display = new Display(_newLine, _script);
-            _executor = new Executor(_commands, _display);
+            _executor = new Executor(_commands);
             _inputService = new InputService(_display, _executor);
         }
 

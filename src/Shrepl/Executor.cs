@@ -12,7 +12,6 @@ namespace CodeSaber.Shrepl
     public class Executor
     {
         private readonly CommandCollection _commands;
-        private readonly Display _display;
         private readonly Session _runtimeSession;
         private readonly ScriptEngine _engine;
 
@@ -22,10 +21,9 @@ namespace CodeSaber.Shrepl
                 "bar"
             };
 
-        public Executor(CommandCollection commands, Display display)
+        public Executor(CommandCollection commands)
         {
             _commands = commands;
-            _display = display;
             _engine = InitEngine();
             _runtimeSession = _engine.CreateSession();
         }
@@ -48,71 +46,31 @@ namespace CodeSaber.Shrepl
         public IEnumerable<string> Suggest(string start)
         {
             return _members.Where(x => x.StartsWith(start, StringComparison.CurrentCulture));
-        } 
+        }
 
-        public bool Execute(string input)
+        public ScriptChunkResult Process(string input)
         {
+            var result = new ScriptChunkResult();
+
             var command = _commands.Get(input);
             if (command != null)
-                return ProcessCommand(command, input);
-
-            return ProcessScript(input);
-        }
-
-        private bool ProcessCommand(ShreplCommand command, string commandLine)
-        {
-            try
             {
-                var output = command.Execute();
+                try
+                {
+                    result.SetExecuteAction(() => command.Execute());
+                }
+                catch (Exception ex)
+                {
+                    result.RunTimeException = ex;
+                }
 
-                if (output != null)
-                    _display.OutputResult(output);
+                return result;
             }
-            catch (Exception ex)
-            {
-                _display.OutputRunTimeException(ex);
-            }
-
-            return true;
-        }
-
-        private bool ProcessScript(string input)
-        {
-            var state = ExecuteScript(input);
-
-            if (state.ReturnValue != null)
-            {
-                _display.OutputResult(state.ReturnValue);
-                return true;
-            }
-
-            if (state.RunTimeException != null)
-            {
-                _display.OutputRunTimeException(state.RunTimeException);
-                return true;
-            }
-
-            if (state.IsExpectingClosingChar.HasValue)
-            {
-                return false;
-            }
-
-            if (state.CompileTimeException != null)
-            {
-                _display.OutputCompileTimeException(state.CompileTimeException);
-                return true;
-            }
-
-            return true;
-        }
-
-        private ExecutionResult ExecuteScript(string scriptChunk)
-        {
-            var result = new ExecutionResult();
 
             try
             {
-                result.Submission = _runtimeSession.CompileSubmission<object>(scriptChunk);
+                var submission = _runtimeSession.CompileSubmission<object>(input ?? "");
+                result.SetExecuteAction(submission.Execute);
             }
             catch (Exception ex)
             {
@@ -120,18 +78,6 @@ namespace CodeSaber.Shrepl
                 result.UpdateClosingExpectation(ex);
                 if (!result.IsExpectingClosingChar.HasValue)
                     result.CompileTimeException = ex;
-            }
-
-            if (result.Submission != null)
-            {
-                try
-                {
-                    result.ReturnValue = result.Submission.Execute();
-                }
-                catch (Exception ex)
-                {
-                    result.RunTimeException = ex;
-                }
             }
 
             return result;

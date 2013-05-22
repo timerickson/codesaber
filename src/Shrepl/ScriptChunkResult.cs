@@ -3,13 +3,38 @@ using Roslyn.Scripting;
 
 namespace CodeSaber.Shrepl
 {
-    public class ExecutionResult
+    public class ScriptChunkResult
     {
-        public Submission<object> Submission { get; set; }
         public Exception CompileTimeException { get; set; }
         public char? IsExpectingClosingChar { get; set; }
         public object ReturnValue { get; set; }
         public Exception RunTimeException { get; set; }
+
+        private Func<object> _executeAction = null;
+        public void SetExecuteAction(Func<object> executeAction)
+        {
+            _executeAction = executeAction;
+        }
+
+        public void Execute()
+        {
+            if (_executeAction == null)
+                throw new Exception("ExecuteAction has not been set!");
+
+            try
+            {
+                ReturnValue = _executeAction();
+            }
+            catch (Exception ex)
+            {
+                RunTimeException = ex;
+            }
+        }
+
+        public bool IsPendingClosing
+        {
+            get { return IsExpectingClosingChar.HasValue; }
+        }
 
         public void UpdateClosingExpectation(Exception ex)
         {
