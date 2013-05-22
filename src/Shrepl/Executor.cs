@@ -15,12 +15,6 @@ namespace CodeSaber.Shrepl
         private readonly Session _runtimeSession;
         private readonly ScriptEngine _engine;
 
-        private readonly List<string> _members = new List<string>
-            {
-                "foo",
-                "bar"
-            };
-
         public Executor(CommandCollection commands)
         {
             _commands = commands;
@@ -41,11 +35,6 @@ namespace CodeSaber.Shrepl
                 Directory.CreateDirectory(bin);
 
             return engine;
-        }
-
-        public IEnumerable<string> Suggest(string start)
-        {
-            return _members.Where(x => x.StartsWith(start, StringComparison.CurrentCulture));
         }
 
         public ScriptChunkResult Process(string input)
@@ -70,6 +59,10 @@ namespace CodeSaber.Shrepl
             try
             {
                 var submission = _runtimeSession.CompileSubmission<object>(input ?? "");
+                if (submission.Compilation != null && 
+                    submission.Compilation.ScriptClass != null && 
+                    submission.Compilation.ScriptClass.MemberNames != null)
+                result.NewMemberNames = submission.Compilation.ScriptClass.MemberNames;
                 result.SetExecuteAction(submission.Execute);
             }
             catch (Exception ex)

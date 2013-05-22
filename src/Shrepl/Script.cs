@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CodeSaber.Shrepl
 {
@@ -6,9 +8,21 @@ namespace CodeSaber.Shrepl
     {
         private readonly List<TextArea> _chunks = new List<TextArea>();
 
+        private readonly List<string> _memberNames = new List<string>(); 
+
         public void AppendChunk(TextArea textArea)
         {
             _chunks.Add(textArea);
+        }
+
+        public void AppendMemberNames(IEnumerable<string> newMembers)
+        {
+            _memberNames.AddRange(newMembers);
+        }
+
+        public IEnumerable<string> SuggestCompletions(string start)
+        {
+            return _memberNames.Where(x => x.StartsWith(start, StringComparison.CurrentCulture));
         }
 
 /*

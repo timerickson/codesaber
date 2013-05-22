@@ -51,7 +51,7 @@ namespace CodeSaber.Shrepl
             else if (key == ConsoleKey.Backspace)
                 Backspace();
             else
-                Append(new string(keyInfo.KeyChar, 1));
+                AppendTyping(new string(keyInfo.KeyChar, 1));
         }
 
         private bool HandleArrow(ConsoleKeyInfo keyInfo)
@@ -59,6 +59,9 @@ namespace CodeSaber.Shrepl
             var key = keyInfo.Key;
             switch (keyInfo.Key)
             {
+                    case ConsoleKey.Escape:
+                    Escape(key, keyInfo.Modifiers);
+                    break;
                 case ConsoleKey.LeftArrow:
                     LeftArrow(key, keyInfo.Modifiers);
                     break;
@@ -76,6 +79,11 @@ namespace CodeSaber.Shrepl
             }
 
             return true;
+        }
+
+        public virtual void Escape(ConsoleKey key, ConsoleModifiers modifiers)
+        {
+            
         }
 
         public virtual void LeftArrow(ConsoleKey key, ConsoleModifiers modifiers)
@@ -100,6 +108,11 @@ namespace CodeSaber.Shrepl
             if (Console.CursorTop == (_displayLineIndex + Text.GetLines().Count() - 1))
                 return;
             Console.CursorTop++;
+        }
+
+        public virtual void AppendTyping(string input)
+        {
+            Append(input);
         }
 
         public virtual void Append(string input)

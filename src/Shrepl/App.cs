@@ -17,6 +17,7 @@ namespace CodeSaber.Shrepl
             _commands = new CommandCollection(this);
 
             _script = new Script();
+            _script.AppendMemberNames(_commands.GetAllNames());
 
             _display = new Display(_newLine, _script);
             _executor = new Executor(_commands);
@@ -43,6 +44,7 @@ namespace CodeSaber.Shrepl
             _isRunning = true;
 
             _inputService.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
+            //_inputService.Buffer("class Foo { public void DoNothing(){}}\r\nvar foo = new Foo();\r\nfoo.DoNothing()");
 
             while (_isRunning)
                 _inputService.Read();

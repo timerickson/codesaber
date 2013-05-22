@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CodeSaber.Shrepl.Commands;
 
 namespace CodeSaber.Shrepl
@@ -37,5 +38,10 @@ namespace CodeSaber.Shrepl
 
             return _commands[name];
         }
+
+        public IEnumerable<string> GetAllNames()
+        {
+            return _commands.Select(x => "#" + x.Key);
+        } 
     }
 }

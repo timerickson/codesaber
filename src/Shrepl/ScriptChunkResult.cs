@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Roslyn.Scripting;
 
 namespace CodeSaber.Shrepl
@@ -8,7 +9,14 @@ namespace CodeSaber.Shrepl
         public Exception CompileTimeException { get; set; }
         public char? IsExpectingClosingChar { get; set; }
         public object ReturnValue { get; set; }
+        public Type ReturnType { get; set; }
         public Exception RunTimeException { get; set; }
+        public IEnumerable<string> NewMemberNames { get; set; }
+
+        public ScriptChunkResult()
+        {
+            NewMemberNames = new string[0];
+        }
 
         private Func<object> _executeAction = null;
         public void SetExecuteAction(Func<object> executeAction)

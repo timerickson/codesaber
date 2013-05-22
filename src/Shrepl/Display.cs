@@ -27,6 +27,8 @@ namespace CodeSaber.Shrepl
 
         public void OutputResult(object obj)
         {
+            //http://stackoverflow.com/questions/1820243/how-to-test-if-methodinfo-returntype-is-type-of-system-void
+            //var text = obj.GetType() == typeof(void) ? "<void>" : obj.ToString();
             Output(new Output(obj.ToString(), ConsoleColor.Green));
         }
 

@@ -25,11 +25,10 @@ namespace CodeSaber.Shrepl
             Console.Write(InputStartMarker);
         }
 
-        public override void Process(ConsoleKeyInfo keyInfo)
+        public override void Escape(ConsoleKey key, ConsoleModifiers modifiers)
         {
-            base.Process(keyInfo);
-
-            Suggest();
+            base.Escape(key, modifiers);
+            ClearSuggestion();
         }
 
         public override void LeftArrow(ConsoleKey key, ConsoleModifiers modifiers)
@@ -39,6 +38,14 @@ namespace CodeSaber.Shrepl
             base.LeftArrow(key, modifiers);
         }
 
+        public override void AppendTyping(string input)
+        {
+            base.Append(input);
+
+            Suggest();
+        }
+
+        private string _suggestedEnding;
         private void Suggest()
         {
             string start = null;
@@ -51,14 +58,22 @@ namespace CodeSaber.Shrepl
                 start = Text.Substring(startIndex + 1);
             if (string.IsNullOrEmpty(start))
                 return;
-            var suggestions = _executor.Suggest(start);
+            var suggestions = _script.SuggestCompletions(start);
             if (!suggestions.Any())
                 return;
             var first = suggestions.First();
-            var end = first.Substring(start.Length);
+            _suggestedEnding = first.Substring(start.Length);
             var col = Console.CursorLeft;
-            Print(end, ConsoleColor.Yellow);
+            Print(_suggestedEnding, ConsoleColor.Yellow);
             Console.CursorLeft = col;
+        }
+
+        private void ClearSuggestion()
+        {
+            //Console.CursorLeft -= _suggestedEnding.Length;
+            Console.Write(new string(' ', _suggestedEnding.Length));
+            Console.CursorLeft -= _suggestedEnding.Length;
+            _suggestedEnding = null;
         }
 
         public override void Enter()
@@ -79,6 +94,7 @@ namespace CodeSaber.Shrepl
 
             IsComplete = true;
             _script.AppendChunk(this);
+            _script.AppendMemberNames(result.NewMemberNames);
 
             if (result.CompileTimeException != null)
             {
