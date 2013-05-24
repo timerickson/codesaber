@@ -31,9 +31,21 @@ namespace CodeSaber.Shrepl
             ClearSuggestion();
         }
 
+        private bool CanGoLeft()
+        {
+            return Console.CursorLeft > InputStartMarker.Length;
+        }
+
+        public override void Backspace()
+        {
+            if (!CanGoLeft())
+                return;
+            base.Backspace();
+        }
+
         public override void LeftArrow(ConsoleKey key, ConsoleModifiers modifiers)
         {
-            if (Console.CursorLeft <= InputStartMarker.Length)
+            if (!CanGoLeft())
                 return;
             base.LeftArrow(key, modifiers);
         }

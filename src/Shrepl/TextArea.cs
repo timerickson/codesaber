@@ -121,7 +121,7 @@ namespace CodeSaber.Shrepl
             Print(input);
         }
 
-        public void Backspace()
+        public virtual void Backspace()
         {
             if (string.IsNullOrEmpty(Text))
                 return;
