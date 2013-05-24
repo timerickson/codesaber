@@ -25,6 +25,23 @@ namespace CodeSaber.Shrepl
             Console.Write(InputStartMarker);
         }
 
+        public override void Process(ConsoleKeyInfo keyInfo)
+        {
+            if (_suggestedEnding != null)
+            {
+                if (IsAcceptKey(keyInfo))
+                {
+                    AcceptSuggestion();
+                    return;
+                }
+                else
+                {
+                    ClearSuggestion();
+                }
+            }
+            base.Process(keyInfo);
+        }
+
         public override void Escape(ConsoleKey key, ConsoleModifiers modifiers)
         {
             base.Escape(key, modifiers);
@@ -80,12 +97,35 @@ namespace CodeSaber.Shrepl
             Console.CursorLeft = col;
         }
 
+        private bool IsAcceptKey(ConsoleKeyInfo keyInfo)
+        {
+            var key = keyInfo.Key;
+            var c = keyInfo.KeyChar;
+            if (key == ConsoleKey.Tab)
+                return true;
+            if (c == ' ' ||
+                c == '.')
+            {
+                _suggestedEnding += new string(c, 1);
+                return true;
+            }
+
+            return false;
+        }
+
         private void ClearSuggestion()
         {
             //Console.CursorLeft -= _suggestedEnding.Length;
             Console.Write(new string(' ', _suggestedEnding.Length));
             Console.CursorLeft -= _suggestedEnding.Length;
             _suggestedEnding = null;
+        }
+
+        private void AcceptSuggestion()
+        {
+            var ending = _suggestedEnding;
+            ClearSuggestion();
+            Append(ending);
         }
 
         public override void Enter()

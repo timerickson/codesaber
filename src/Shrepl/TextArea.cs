@@ -7,6 +7,7 @@ namespace CodeSaber.Shrepl
     {
         private readonly int _displayLineIndex;
         protected readonly string NewLine;
+        protected readonly string TabString = "  ";
 
         protected TextArea(string newLine, int displayLineIndex)
         {
@@ -59,7 +60,10 @@ namespace CodeSaber.Shrepl
             var key = keyInfo.Key;
             switch (keyInfo.Key)
             {
-                    case ConsoleKey.Escape:
+                case ConsoleKey.Tab:
+                    Tab(key, keyInfo.Modifiers);
+                    break;
+                case ConsoleKey.Escape:
                     Escape(key, keyInfo.Modifiers);
                     break;
                 case ConsoleKey.LeftArrow:
@@ -79,6 +83,11 @@ namespace CodeSaber.Shrepl
             }
 
             return true;
+        }
+
+        protected virtual void Tab(ConsoleKey key, ConsoleModifiers modifiers)
+        {
+            Append(TabString);
         }
 
         public virtual void Escape(ConsoleKey key, ConsoleModifiers modifiers)
