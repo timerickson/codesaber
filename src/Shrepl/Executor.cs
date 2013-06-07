@@ -39,13 +39,14 @@ namespace CodeSaber.Shrepl
 
         public ScriptChunkResult Process(string input)
         {
-            var result = new ScriptChunkResult();
+            var result = new ScriptChunkResult(input);
 
             var command = _commands.Get(input);
             if (command != null)
             {
                 try
                 {
+                    result.UpdateScriptChunk(command);
                     result.SetExecuteAction(() => command.Execute());
                 }
                 catch (Exception ex)

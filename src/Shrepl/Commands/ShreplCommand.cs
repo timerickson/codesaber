@@ -3,6 +3,15 @@
     public abstract class ShreplCommand
     {
         public abstract string Name { get; }
-        public abstract object Execute(object parameter = null);
+        public abstract string Description { get; }
+
+        public string Parameters { get; set; }
+
+        public abstract object Execute();
+
+        public virtual string GetModifiedScriptChunk(string scriptChunk)
+        {
+            return scriptChunk;
+        }
     }
 }

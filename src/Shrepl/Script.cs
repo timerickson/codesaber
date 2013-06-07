@@ -25,6 +25,10 @@ namespace CodeSaber.Shrepl
             return _memberNames.Where(x => x.StartsWith(start, StringComparison.CurrentCulture));
         }
 
+        public string GetAllText(string newLine)
+        {
+            return string.Join(newLine, _chunks.Select(x => x.Text));
+        }
 /*
         private static MemberDeclarationSyntax GetFinalInteractiveStatement(Submission<object> testSubmission)
         {

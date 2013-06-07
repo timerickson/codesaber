@@ -8,9 +8,11 @@ namespace CodeSaber.Shrepl.Commands
     {
         public override string Name { get { return "ice"; } }
 
+        public override string Description { get { return "Open GUI (ICE - Integrated Code Environment)"; } }
+
         private const string IceExe = "CodeSaber.Ice.exe";
 
-        public override object Execute(object parameter = null)
+        public override object Execute()
         {
             if (!File.Exists(IceExe))
             {

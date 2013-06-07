@@ -14,9 +14,9 @@ namespace CodeSaber.Shrepl
         {
             _newLine = Environment.NewLine;
 
-            _commands = new CommandCollection(this);
-
             _script = new Script();
+            _commands = new CommandCollection(_newLine, this, _script);
+
             _script.AppendMemberNames(_commands.GetAllNames());
 
             _display = new Display(_newLine, _script);

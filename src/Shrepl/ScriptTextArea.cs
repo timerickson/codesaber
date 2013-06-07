@@ -145,6 +145,7 @@ namespace CodeSaber.Shrepl
             }
 
             IsComplete = true;
+            Text = result.ScriptChunk;
             _script.AppendChunk(this);
             _script.AppendMemberNames(result.NewMemberNames);
 

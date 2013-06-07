@@ -1,19 +1,31 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 namespace CodeSaber.Shrepl.Commands
 {
-    public class HelpCommand : ShreplCommand
+    public partial class CommandCollection
     {
-        public override string Name { get { return "help"; } }
-
-        public override object Execute(object parameter = null)
+        private class HelpCommand : ShreplCommand
         {
-            var help = new StringBuilder();
-            help.AppendLine("REPL commands:");
-            help.AppendLine("  help    Display all available REPL commands");
-            help.AppendLine("  ice     Open GUI (ICE - Integrated Code Environment)");
-            help.Append("  exit    Exit");
-            return help.ToString();
+            private readonly IEnumerable<ShreplCommand> _commandList;
+
+            public HelpCommand(IEnumerable<ShreplCommand> commandList)
+            {
+                _commandList = commandList;
+            }
+
+            public override string Name { get { return "help"; } }
+
+            public override string Description { get { return "Display all available REPL commands"; } }
+
+            public override object Execute()
+            {
+                var help = new StringBuilder();
+                help.AppendLine("REPL commands:");
+                foreach (var command in _commandList)
+                    help.AppendLine(string.Format("  {0}    {1}", command.Name, command.Description));
+                return help.ToString();
+            }
         }
     }
 }
