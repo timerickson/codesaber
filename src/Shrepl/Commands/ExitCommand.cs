@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CodeSaber.Shrepl.Commands
+﻿namespace CodeSaber.Shrepl.Commands
 {
     public class ExitCommand : ShreplCommand
     {

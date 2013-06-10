@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using CodeSaber.Shrepl.Commands;
 using Roslyn.Scripting;
 using Roslyn.Scripting.CSharp;
@@ -47,7 +45,7 @@ namespace CodeSaber.Shrepl
                 try
                 {
                     result.UpdateScriptChunk(command);
-                    result.SetExecuteAction(() => command.Execute());
+                    result.SetExecuteAction(command.Execute);
                 }
                 catch (Exception ex)
                 {

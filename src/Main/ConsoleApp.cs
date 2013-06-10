@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using CodeSaber.Shrepl;
+﻿using CodeSaber.Shrepl;
 
 namespace CodeSaber
 {

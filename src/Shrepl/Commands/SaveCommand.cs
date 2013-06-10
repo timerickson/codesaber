@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 
 namespace CodeSaber.Shrepl.Commands
@@ -31,7 +32,7 @@ namespace CodeSaber.Shrepl.Commands
             {
                 Console.WriteLine("Overwrite y/[n]?");
                 var response = Console.ReadKey(true);
-                if (response.KeyChar.ToString().ToLowerInvariant() != "y")
+                if (response.KeyChar.ToString(CultureInfo.CurrentCulture).ToLowerInvariant() != "y")
                     return null;
             }
             File.WriteAllText(fileName, _script.GetAllText(_newLine));

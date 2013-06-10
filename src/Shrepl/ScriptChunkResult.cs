@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeSaber.Shrepl.Commands;
-using Roslyn.Scripting;
 
 namespace CodeSaber.Shrepl
 {
@@ -20,7 +19,7 @@ namespace CodeSaber.Shrepl
             NewMemberNames = new string[0];
         }
 
-        private Func<object> _executeAction = null;
+        private Func<object> _executeAction;
         public void SetExecuteAction(Func<object> executeAction)
         {
             _executeAction = executeAction;

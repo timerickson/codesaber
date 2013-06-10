@@ -26,16 +26,16 @@ namespace CodeSaber.Shrepl
                 if (string.Equals(_text, value))
                     return;
                 _text = value;
-                UpdateLines();
+                //UpdateLines();
             }
         }
 
-        private string[] Lines { get; set; }
+        //private string[] Lines { get; set; }
 
-        private void UpdateLines()
-        {
-            Lines = Text.GetLines().ToArray();
-        }
+        //private void UpdateLines()
+        //{
+        //    Lines = Text.GetLines().ToArray();
+        //}
 
         public virtual void Process(ConsoleKeyInfo keyInfo)
         {

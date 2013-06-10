@@ -34,10 +34,8 @@ namespace CodeSaber.Shrepl
                     AcceptSuggestion();
                     return;
                 }
-                else
-                {
-                    ClearSuggestion();
-                }
+
+                ClearSuggestion();
             }
             base.Process(keyInfo);
         }
@@ -77,17 +75,15 @@ namespace CodeSaber.Shrepl
         private string _suggestedEnding;
         private void Suggest()
         {
-            string start = null;
             if (string.IsNullOrEmpty(Text))
                 return;
-            var startIndex = Text.LastIndexOf(" ");
+            var startIndex = Text.LastIndexOf(" ", StringComparison.InvariantCulture);
             if (startIndex == -1)
-                start = Text;
-            else
-                start = Text.Substring(startIndex + 1);
+                startIndex = 0;
+            var start = Text.Substring(startIndex + 1);
             if (string.IsNullOrEmpty(start))
                 return;
-            var suggestions = _script.SuggestCompletions(start);
+            var suggestions = _script.SuggestCompletions(start).ToArray();
             if (!suggestions.Any())
                 return;
             var first = suggestions.First();

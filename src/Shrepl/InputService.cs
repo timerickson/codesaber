@@ -16,7 +16,7 @@ namespace CodeSaber.Shrepl
             _executor = executor;
         }
 
-        private string _rawInputBuffer = null;
+        private string _rawInputBuffer;
 
         public void Read()
         {

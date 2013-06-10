@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using CodeSaber.Shrepl.Commands;
 
 namespace CodeSaber.Shrepl.Commands
 {
@@ -15,6 +13,7 @@ namespace CodeSaber.Shrepl.Commands
             Register(new HelpCommand(_commands));
             Register(new StartIceCommand());
             Register(new SaveCommand(newLine, script));
+            Register(new GistCommand(newLine, script));
             Register(new ExitCommand(app));
         }
 
