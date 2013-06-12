@@ -6,14 +6,12 @@ namespace CodeSaber.Shrepl
 {
     public class InputService
     {
-        private readonly Display _display;
-        private readonly Executor _executor;
+        private readonly App _app;
         private readonly Queue<BufferedInput> _inputBuffer = new Queue<BufferedInput>();
 
-        public InputService(Display display, Executor executor)
+        public InputService(App app)
         {
-            _display = display;
-            _executor = executor;
+            _app = app;
         }
 
         private string _rawInputBuffer;
@@ -22,10 +20,11 @@ namespace CodeSaber.Shrepl
         {
             EnqueuRawInputBuffer();
 
-            var textArea = _display.CurrentTextArea;
+            var display = _app.Display;
+            var textArea = display.CurrentTextArea;
 
             if (textArea == null || textArea.IsComplete)
-                textArea = _display.NextScriptInput(_executor);
+                textArea = display.NextScriptInput(_app.Executor);
 
             if (_inputBuffer.Count > 0)
             {

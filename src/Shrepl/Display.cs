@@ -5,21 +5,19 @@ namespace CodeSaber.Shrepl
 {
     public class Display
     {
-        private readonly string _newLine;
-        private readonly Script _script;
+        private readonly App _app;
         private readonly List<TextArea> _chunks = new List<TextArea>();
 
-        public Display(string newLine, Script script)
+        public Display(App app)
         {
-            _newLine = newLine;
-            _script = script;
+            _app = app;
         }
 
         public TextArea CurrentTextArea { get; private set; }
 
         public TextArea NextScriptInput(Executor executor)
         {
-            var newTextArea = new ScriptTextArea(_newLine, Console.CursorTop, _script, executor, this);
+            var newTextArea = new ScriptTextArea(_app, Console.CursorTop);
             _chunks.Add(newTextArea);
             CurrentTextArea = newTextArea;
             return newTextArea;
@@ -41,7 +39,7 @@ namespace CodeSaber.Shrepl
         {
             var message = ex.Message;
             if (message.Contains("CS1024: Preprocessor directive expected"))
-                message += _newLine + _newLine + "Try '#help'...";
+                message += _app.NewLine + _app.NewLine + "Try '#help'...";
             Output(new Output(message, ConsoleColor.Red));
         }
 
@@ -52,7 +50,7 @@ namespace CodeSaber.Shrepl
 
         private void Output(Output output)
         {
-            var area = new OutputTextArea(_newLine, Console.CursorTop, output.Color);
+            var area = new OutputTextArea(_app.NewLine, Console.CursorTop, output.Color);
             area.Append(output.Text);
             _chunks.Add(area);
         }

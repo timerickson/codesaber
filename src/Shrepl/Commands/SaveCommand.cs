@@ -6,18 +6,6 @@ namespace CodeSaber.Shrepl.Commands
 {
     public class SaveCommand : ShreplCommand
     {
-        private readonly string _newLine;
-        private readonly Script _script;
-
-        public SaveCommand(string newLine, Script script)
-        {
-            if (script == null)
-                throw new ArgumentNullException("script");
-
-            _newLine = newLine;
-            _script = script;
-        }
-
         public override string Name { get { return "save"; } }
 
         public override string Description
@@ -25,7 +13,7 @@ namespace CodeSaber.Shrepl.Commands
             get { return "Save Script to file (.csx) in current directory"; }
         }
 
-        public override object Execute()
+        public override object Execute(App app)
         {
             var fileName = Parameters;
             if (File.Exists(fileName))
@@ -35,7 +23,7 @@ namespace CodeSaber.Shrepl.Commands
                 if (response.KeyChar.ToString(CultureInfo.CurrentCulture).ToLowerInvariant() != "y")
                     return null;
             }
-            File.WriteAllText(fileName, _script.GetAllText(_newLine));
+            File.WriteAllText(fileName, app.Script.GetAllText(app.NewLine));
             return null;
         }
 

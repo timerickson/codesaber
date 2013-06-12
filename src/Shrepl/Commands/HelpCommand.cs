@@ -18,7 +18,7 @@ namespace CodeSaber.Shrepl.Commands
 
             public override string Description { get { return "Display all available REPL commands"; } }
 
-            public override object Execute()
+            public override object Execute(App app)
             {
                 var help = new StringBuilder();
                 help.AppendLine("REPL commands:");

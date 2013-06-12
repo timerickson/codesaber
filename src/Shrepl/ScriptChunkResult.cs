@@ -19,20 +19,20 @@ namespace CodeSaber.Shrepl
             NewMemberNames = new string[0];
         }
 
-        private Func<object> _executeAction;
-        public void SetExecuteAction(Func<object> executeAction)
+        private Func<App, object> _executeAction;
+        public void SetExecuteAction(Func<App, object> executeAction)
         {
             _executeAction = executeAction;
         }
 
-        public void Execute()
+        public void Execute(App app)
         {
             if (_executeAction == null)
                 throw new Exception("ExecuteAction has not been set!");
 
             try
             {
-                ReturnValue = _executeAction();
+                ReturnValue = _executeAction(app);
             }
             catch (Exception ex)
             {

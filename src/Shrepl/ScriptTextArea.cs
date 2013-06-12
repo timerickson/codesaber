@@ -5,15 +5,11 @@ namespace CodeSaber.Shrepl
 {
     public class ScriptTextArea : TextArea
     {
-        private readonly Script _script;
-        private readonly Executor _executor;
-        private readonly Display _display;
+        private readonly App _app;
 
-        public ScriptTextArea(string newLine, int displayLineIndex, Script script, Executor executor, Display display) : base(newLine, displayLineIndex)
+        public ScriptTextArea(App app, int displayLineIndex) : base(app.NewLine, displayLineIndex)
         {
-            _script = script;
-            _executor = executor;
-            _display = display;
+            _app = app;
 
             MarkInputStart();
         }
@@ -78,12 +74,10 @@ namespace CodeSaber.Shrepl
             if (string.IsNullOrEmpty(Text))
                 return;
             var startIndex = Text.LastIndexOf(" ", StringComparison.InvariantCulture);
-            if (startIndex == -1)
-                startIndex = 0;
             var start = Text.Substring(startIndex + 1);
             if (string.IsNullOrEmpty(start))
                 return;
-            var suggestions = _script.SuggestCompletions(start).ToArray();
+            var suggestions = _app.Script.SuggestCompletions(start).ToArray();
             if (!suggestions.Any())
                 return;
             var first = suggestions.First();
@@ -128,7 +122,7 @@ namespace CodeSaber.Shrepl
         {
             base.Enter();
 
-            var result = _executor.Process(Text);
+            var result = _app.Executor.Process(Text);
             Process(result);
         }
 
@@ -142,26 +136,28 @@ namespace CodeSaber.Shrepl
 
             IsComplete = true;
             Text = result.ScriptChunk;
-            _script.AppendChunk(this);
-            _script.AppendMemberNames(result.NewMemberNames);
+            var script = _app.Script;
+            script.AppendChunk(this);
+            script.AppendMemberNames(result.NewMemberNames);
 
+            var display = _app.Display;
             if (result.CompileTimeException != null)
             {
-                _display.OutputCompileTimeException(result.CompileTimeException);
+                display.OutputCompileTimeException(result.CompileTimeException);
                 return;
             }
 
-            result.Execute();
+            result.Execute(_app);
 
             if (result.RunTimeException != null)
             {
-                _display.OutputRunTimeException(result.RunTimeException);
+                display.OutputRunTimeException(result.RunTimeException);
                 return;
             }
 
             if (result.ReturnValue != null)
             {
-                _display.OutputResult(result.ReturnValue);
+                display.OutputResult(result.ReturnValue);
             }
         }
     }

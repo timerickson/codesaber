@@ -12,7 +12,7 @@ namespace CodeSaber.Shrepl.Commands
 
         private const string IceExe = "CodeSaber.Ice.exe";
 
-        public override object Execute()
+        public override object Execute(App app)
         {
             if (!File.Exists(IceExe))
             {

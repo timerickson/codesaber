@@ -8,13 +8,13 @@ namespace CodeSaber.Shrepl.Commands
     {
         private readonly List<ShreplCommand> _commands = new List<ShreplCommand>();
 
-        public CommandCollection(string newLine, App app, Script script)
+        public CommandCollection(App app)
         {
             Register(new HelpCommand(_commands));
             Register(new StartIceCommand());
-            Register(new SaveCommand(newLine, script));
-            Register(new GistCommand(newLine, script));
-            Register(new ExitCommand(app));
+            Register(new SaveCommand());
+            Register(new GistCommand());
+            Register(new ExitCommand());
         }
 
         public void Register(ShreplCommand command)

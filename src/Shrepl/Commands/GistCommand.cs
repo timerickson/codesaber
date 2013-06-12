@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,15 +14,6 @@ namespace CodeSaber.Shrepl.Commands
 {
     public class GistCommand : ShreplCommand
     {
-        private readonly string _newLine;
-        private readonly Script _script;
-
-        public GistCommand(string newLine, Script script)
-        {
-            _newLine = newLine;
-            _script = script;
-        }
-
         public override string Name
         {
             get { return "gist"; }
@@ -32,21 +24,58 @@ namespace CodeSaber.Shrepl.Commands
             get { return "GitHub Gist (save, load, list, signin, signout)"; }
         }
 
-        public override object Execute()
+        public override object Execute(App app)
         {
             Parameters = Parameters ?? "";
             var parms = Parameters.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
             if (parms.Length == 0)
                 return Usage();
             
-            return Execute(parms).Result;
+            return Execute(app, parms).Result;
         }
 
-        private async Task<object> Execute(string[] parms)
+        public override string GetModifiedScriptChunk(string scriptChunk)
+        {
+            return "";
+        }
+
+        private async Task<object> Execute(App app, string[] parms)
         {
             InitApi();
 
-            var text = _script.GetAllText(_newLine);
+            var command = parms[0].ToLowerInvariant();
+            if (command == "save")
+                return await SaveToGist(app);
+            else if (command == "open")
+                return await OpenFromGist(app, parms[1]);
+            else
+                return Usage();
+        }
+
+        async private Task<object> OpenFromGist(App app, string idOrUrl)
+        {
+            long id;
+            if (!long.TryParse(idOrUrl, out id))
+                id = Gist.ParseIdFromUrl(idOrUrl);
+            var gist = await _api.Gists.Get(id);
+            if (gist.Files.Count == 0)
+            {
+                Console.WriteLine("No file found in gist " + id);
+                return null;
+            }
+            else if (gist.Files.Count > 1)
+            {
+                Console.WriteLine("Multi-file gists not yet supported");
+                return null;
+            }
+            var text = gist.Files[gist.Files.Keys.First()].Content;
+            app.InputService.Buffer(text);
+            return null;
+        }
+
+        async private Task<object> SaveToGist(App app)
+        {
+            var text = app.Script.GetAllText(app.NewLine);
             var files = new Dictionary<string, Gist.NewGistPost.NewGistFile>
                 {
                     {"Script20130607.csx", new Gist.NewGistPost.NewGistFile{Content=text}}
@@ -58,7 +87,7 @@ namespace CodeSaber.Shrepl.Commands
             var key = Console.ReadKey(true);
             if (key.KeyChar.ToString(CultureInfo.CurrentCulture).ToLower(CultureInfo.CurrentCulture) == "y")
                 Process.Start(url);
-            Console.Write(_newLine);
+            Console.Write(app.NewLine);
             return null;
         }
 
@@ -88,9 +117,10 @@ namespace CodeSaber.Shrepl.Commands
             var usage = new StringBuilder();
             usage.AppendLine("#gist save [private] (private only if signed in, anonymous if not)");
             usage.AppendLine("#gist open [url | gistId]");
-            usage.AppendLine("#gist list (only when signed in)");
-            usage.AppendLine("#gist signin myGitHubUserName myGitHubPassword");
-            usage.AppendLine("#gist signout");
+            //usage.AppendLine("#gist insert [url | gistId]");
+            //usage.AppendLine("#gist list (only when signed in)");
+            //usage.AppendLine("#gist signin myGitHubUserName myGitHubPassword");
+            //usage.AppendLine("#gist signout");
             return usage.ToString();
         }
     }

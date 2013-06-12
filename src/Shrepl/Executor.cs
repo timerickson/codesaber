@@ -62,7 +62,7 @@ namespace CodeSaber.Shrepl
                     submission.Compilation.ScriptClass != null && 
                     submission.Compilation.ScriptClass.MemberNames != null)
                 result.NewMemberNames = submission.Compilation.ScriptClass.MemberNames;
-                result.SetExecuteAction(submission.Execute);
+                result.SetExecuteAction(app => submission.Execute());
             }
             catch (Exception ex)
             {

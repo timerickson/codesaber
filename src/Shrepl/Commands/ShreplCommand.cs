@@ -7,7 +7,7 @@
 
         public string Parameters { get; set; }
 
-        public abstract object Execute();
+        public abstract object Execute(App app);
 
         public virtual string GetModifiedScriptChunk(string scriptChunk)
         {

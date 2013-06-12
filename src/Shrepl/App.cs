@@ -8,26 +8,26 @@ namespace CodeSaber.Shrepl
 
         public App()
         {
-            _newLine = Environment.NewLine;
+            NewLine = Environment.NewLine;
 
-            _script = new Script();
-            _commands = new CommandCollection(_newLine, this, _script);
+            Script = new Script();
+            _commands = new CommandCollection(this);
 
-            _script.AppendMemberNames(_commands.GetAllNames());
+            Script.AppendMemberNames(_commands.GetAllNames());
 
-            _display = new Display(_newLine, _script);
-            _executor = new Executor(_commands);
-            _inputService = new InputService(_display, _executor);
+            Display = new Display(this);
+            Executor = new Executor(_commands);
+            InputService = new InputService(this);
         }
 
-        private readonly string _newLine;
+        public readonly string NewLine;
 
         private readonly CommandCollection _commands;
 
-        private readonly InputService _inputService;
-        private readonly Script _script;
-        private readonly Executor _executor;
-        private readonly Display _display;
+        public InputService InputService { get; private set; }
+        public Script Script { get; private set; }
+        public Executor Executor { get; private set; }
+        public Display Display { get; private set; }
 
         private bool _isRunning;
 
@@ -39,11 +39,11 @@ namespace CodeSaber.Shrepl
 
             _isRunning = true;
 
-            _inputService.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
+            //_inputService.Buffer("using System;\r\nvar theNumber = 42;\r\ntheNumber\r\nSystem.Console.WriteLine(theNumber);\r\n");
             //_inputService.Buffer("class Foo { public void DoNothing(){}}\r\nvar foo = new Foo();\r\nfoo.DoNothing()");
 
             while (_isRunning)
-                _inputService.Read();
+                InputService.Read();
         }
 
         private void PrintHeader()
@@ -52,7 +52,7 @@ namespace CodeSaber.Shrepl
             text.AppendLine("CodeSaber C# REPL by Tim Erickson (in2bits.org)");
             text.AppendLine("based on Microsoft (R) Roslyn C# Compiler version 1.2.20906.1");
             text.AppendLine("Type \"#help\" for more information.");
-            _display.OutputFeedback(text.ToString());
+            Display.OutputFeedback(text.ToString());
         }
 
         public void Exit()
